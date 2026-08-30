@@ -1,0 +1,19 @@
+# --- アプリのデータ（DB本体。個人情報が含まれる）---
+data/
+
+# --- 秘密情報 ---
+.env
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- ツールのキャッシュ ---
+.ruff_cache/
+
+# --- OS / エディタ ---
+Thumbs.db
+.DS_Store
+.vscode/
