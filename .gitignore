@@ -4,6 +4,9 @@ data/
 # --- 秘密情報 ---
 .env
 
+# --- 作業メモ（公開しない）---
+docs/HANDOFF.md
+
 # --- Python ---
 __pycache__/
 *.py[cod]

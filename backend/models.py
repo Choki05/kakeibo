@@ -1,11 +1,18 @@
 import enum  # noqa: I001
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import CheckConstraint, DateTime, String, func
+from sqlalchemy import CheckConstraint, DateTime, String
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
+
+JST = timezone(timedelta(hours=9))
+
+
+def now_jst() -> datetime:
+    """JST の現在時刻を、タイムゾーン情報なし（naive）で返す。"""
+    return datetime.now(JST).replace(tzinfo=None)
 
 class Direction(enum.StrEnum):
     expense = "expense"
@@ -50,7 +57,7 @@ class Transaction(Base):
     memo: Mapped[str | None] = mapped_column(String(255))
     merchant: Mapped[str | None] = mapped_column(String(255))
     external_key: Mapped[str | None] = mapped_column(String(255), unique=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now_jst)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), onupdate=func.now()
+        DateTime, default=now_jst, onupdate=now_jst
     )
