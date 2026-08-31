@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: I001
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from auth import require_auth
 from database import get_db
 from models import Direction, Source, Status, Transaction
 from schemas import (
@@ -12,7 +13,11 @@ from schemas import (
     TransactionUpdate,
 )
 
-router = APIRouter(prefix="/api/transactions", tags=["transactions"])
+router = APIRouter(
+    prefix="/api/transactions",
+    tags=["transactions"],
+    dependencies=[Depends(require_auth)],
+)
 
 @router.get("", response_model=list[TransactionRead])
 def list_transactions(
