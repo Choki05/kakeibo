@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>家計簿</title>
+        <link rel="stylesheet" href="/style.css" />
+    </head>
+    <body>
+        <!--ログイン画面-->
+        <section id="login-view">
+            <h1>家計簿</h1>
+            <form id="login-form">
+                <label>
+                    パスワード
+                    <input type="password" id="login-password" autocomplete="-current-password" required />
+                </label>
+                <button type="submit">ログイン</button>
+                <p id="login-error" class="error" hidden></p>
+            </form>
+        </section>
+
+        <!--アプリ画面-->
+        <section id="app-view" hidden>
+            <header class="app-header">
+                <h1>家計簿</h1>
+                <button type="button" id="logout-btn">ログアウト</button>
+            </header>
+
+            <form id="tx-form">
+                <div class="direction-toggle">
+                    <button type="button" data-direction="expense" class="active">支出</button>
+                    <button type="button" data-direction="income">収入</button>
+                </div>
+
+                <label>
+                    金額(円)
+                    <input type="number" id="amount" min="1" step="1" required />
+                </label>
+
+                <label>
+                    日時
+                    <input type="datetime-local" id="occurred-at" required />
+                </label>
+
+                <fieldset>
+                    <legend>支払い方法</legend>
+                    <div id="method-buttons" class="choice-group"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>カテゴリ</legend>
+                    <div id="category-buttons" class="choice-group"></div>
+                </fieldset>
+
+                <label>
+                    メモ（任意）
+                    <input type="text" id="memo" maxlength="255" />
+                </label>
+
+                <button type="submit">保存</button>
+                <p id="tx-form-msg" class="msg" hidden></p>
+            </form>
+
+            <!--一覧-->
+            <div class="list-header">
+                <label>
+                    月
+                    <input type="month" id="month-picker" />
+                </label>
+                <button type="button" id="reload-btn">更新</button>
+            </div>
+            <ul id="tx-list"></ul>
+        </section>
+        <script src="/app.js"></script>
+    </body>
+</html>
