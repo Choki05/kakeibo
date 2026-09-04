@@ -1,3 +1,7 @@
+:root {
+  --accent: #0d7aa8;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -44,9 +48,9 @@ button {
 /* 選択中のボタンを強調（.active＝支出収入トグル、.selected＝方法・カテゴリ） */
 .direction-toggle button.active,
 .choice-group button.selected {
-  background: #2b7a2b;
+  background: var(--accent);
   color: #fff;
-  border-color: #2b7a2b;
+  border-color: var(--accent);
 }
 
 fieldset {
@@ -65,7 +69,7 @@ fieldset {
   color: #c00;
 }
 .msg {
-  color: #2b7a2b;
+  color: var(--accent);
 }
 
 .list-header {
