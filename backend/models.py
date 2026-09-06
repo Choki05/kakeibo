@@ -14,11 +14,11 @@ def now_jst() -> datetime:
     """JST の現在時刻を、タイムゾーン情報なし（naive）で返す。"""
     return datetime.now(JST).replace(tzinfo=None)
 
-class Direction(enum.StrEnum):
+class Direction(str, enum.Enum):
     expense = "expense"
     income = "income"
 
-class Method(enum.StrEnum):
+class Method(str, enum.Enum):
     credit_card = "credit_card"
     paypay = "paypay"
     cash = "cash"
@@ -26,12 +26,12 @@ class Method(enum.StrEnum):
     bank_transfer = "bank_transfer"
 
 
-class Source(enum.StrEnum):
+class Source(str, enum.Enum):
     email = "email"
     manual = "manual"
 
 
-class Status(enum.StrEnum):
+class Status(str, enum.Enum):
     confirmed = "confirmed"
     needs_review = "needs_review"
 
