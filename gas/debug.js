@@ -8,6 +8,49 @@
  */
 
 /**
+ * スクリプトプロパティの設定を、値を見せずに確認する。
+ *
+ * トークンは SHA-256 ハッシュの先頭8文字（指紋）と文字数だけを出す。
+ * ハッシュからは元の値を復元できないので、サーバ側の指紋と突き合わせれば
+ * 「同じ値かどうか」だけを安全に確認できる。
+ */
+function debugCheckProperties() {
+  const props = PropertiesService.getScriptProperties();
+
+  const token = props.getProperty("INGEST_TOKEN");
+  if (!token) {
+    console.log("INGEST_TOKEN: 未設定");
+  } else {
+    console.log(
+      "INGEST_TOKEN: 文字数 %s / 指紋 %s",
+      token.length,
+      hashExternalKey(token).slice(0, 8)
+    );
+    if (token !== token.trim()) {
+      console.warn("  → 前後に空白や改行が入っています（コピー時の混入）");
+    }
+  }
+
+  const baseUrl = props.getProperty("API_BASE_URL");
+  if (!baseUrl) {
+    console.log("API_BASE_URL: 未設定");
+  } else {
+    console.log(
+      "API_BASE_URL: 文字数 %s / https:// で始まる %s / 末尾スラッシュ %s",
+      baseUrl.length,
+      baseUrl.indexOf("https://") === 0,
+      baseUrl.slice(-1) === "/"
+    );
+    if (baseUrl !== baseUrl.trim()) {
+      console.warn("  → 前後に空白や改行が入っています");
+    }
+  }
+
+  const address = props.getProperty("OFFICIAL_ADDRESS");
+  console.log("OFFICIAL_ADDRESS: %s", address ? "設定あり" : "未設定");
+}
+
+/**
  * なぜ解析できないのかを切り分ける。
  * 1通目のメールについて、どの条件で失敗しているかを段階的に表示する。
  */
