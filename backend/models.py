@@ -50,6 +50,24 @@ class IngestState(Base):
     reported_at: Mapped[datetime] = mapped_column(DateTime, default=now_jst)
 
 
+class IngestUnprocessed(Base):
+    """円換算できず取り込めなかったメールの控え。
+
+    GAS は過去7日分を毎回まるごと報告してくる。その中身をここに同期し、
+    「どれを手入力で片付けたか」を dismissed で覚える。
+    時刻の大小で判定すると、対応済みにした直後に届いたメールを取りこぼすため、
+    1件ごとのキーで管理する。
+    """
+
+    __tablename__ = "ingest_unprocessed"
+
+    # GAS が作る安定した識別子（external_key と同じ作り方のハッシュ）
+    key: Mapped[str] = mapped_column(String(255), primary_key=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime)
+    dismissed: Mapped[bool] = mapped_column(default=False)
+    reported_at: Mapped[datetime] = mapped_column(DateTime, default=now_jst)
+
+
 class Transaction(Base):
     __tablename__ = "transactions"
     __table_args__ = (

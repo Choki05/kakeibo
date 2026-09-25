@@ -442,12 +442,28 @@ button {
 
 /* ===== お知らせ・メッセージ ===== */
 .notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0 0 20px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-left: 3px solid var(--warn);
   background: var(--warn-bg);
   border-radius: 10px;
   font-size: 0.85rem;
+}
+
+.dismiss-btn {
+  background: var(--warn);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 16px;
+}
+.dismiss-btn:disabled {
+  opacity: 0.5;
 }
 
 .error {

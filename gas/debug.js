@@ -253,12 +253,12 @@ function verifyDryRun() {
         "メール %s通目 → %s件（未処理 %s件）",
         messageCount,
         parsed.items.length,
-        parsed.unprocessed
+        parsed.unprocessed.length
       );
       parsed.items.forEach(function (item) {
         items.push(item);
       });
-      unprocessed += parsed.unprocessed;
+      unprocessed += parsed.unprocessed.length;
     });
   });
 

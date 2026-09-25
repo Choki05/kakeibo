@@ -27,7 +27,7 @@ function importBankEmails() {
   }
 
   const collected = collectItems(officialAddress);
-  if (collected.items.length === 0 && collected.unprocessed === 0) {
+  if (collected.items.length === 0 && collected.unprocessed.length === 0) {
     console.log("対象メールなし");
     return;
   }
@@ -40,12 +40,15 @@ function importBankEmails() {
   );
   labelUnprocessedThreads(collected.unprocessedThreads);
 
+  // 未処理は「対応済みにする」を押したぶんをサーバが除いて数えるので、
+  // 送った件数（collected）と数えられた件数（result）は一致しないことがある。
   console.log(
-    "送信 %s件 / 登録 %s件 / 重複スキップ %s件 / 未処理 %s件",
+    "送信 %s件 / 登録 %s件 / 重複スキップ %s件 / 未処理 %s件（送信 %s件）",
     collected.items.length,
     result.inserted,
     result.skipped,
-    collected.unprocessed
+    result.unprocessed,
+    collected.unprocessed.length
   );
 }
 
@@ -63,7 +66,7 @@ function dryRun() {
   console.log(
     "%s件を解析（未処理 %s件）:",
     collected.items.length,
-    collected.unprocessed
+    collected.unprocessed.length
   );
   collected.items.forEach(function (item) {
     console.log(JSON.stringify(item));
@@ -80,8 +83,8 @@ function collectItems(officialAddress) {
   const query = "from:" + officialAddress + ' "ご利用のお知らせ" newer_than:7d';
   const threads = GmailApp.search(query, 0, 100);
   const items = [];
+  const unprocessed = [];
   const unprocessedThreads = [];
-  let unprocessed = 0;
 
   threads.forEach(function (thread) {
     let threadUnprocessed = 0;
@@ -91,11 +94,13 @@ function collectItems(officialAddress) {
       parsed.items.forEach(function (item) {
         items.push(item);
       });
-      threadUnprocessed += parsed.unprocessed;
+      parsed.unprocessed.forEach(function (at) {
+        unprocessed.push(at);
+      });
+      threadUnprocessed += parsed.unprocessed.length;
     });
 
     if (threadUnprocessed > 0) {
-      unprocessed += threadUnprocessed;
       unprocessedThreads.push(thread);
     }
   });
@@ -117,20 +122,21 @@ function collectItems(officialAddress) {
  *   ◇利用金額:800円            ← 海外利用だと「27,460.00 JPY」「222,100.00 KRW」
  *
  * 「利用日」の行で1件が始まり、次の「利用日」またはメール末尾までが1件分。
- * 日時はあるのに日本円の金額が取れなかったものは unprocessed として数える
- * （外貨建て＝円換算額がこのメールには無いため、取り込まず後で手入力する）。
+ * 日時はあるのに日本円の金額が取れなかったものは unprocessed に {key, occurred_at}
+ * として記録する（外貨建て＝円換算額がこのメールには無いため、取り込まず後で手入力）。
+ * key は再実行しても同じ値になるので、サーバ側が「どれを対応済みにしたか」を覚えられる。
  *
- * @return {{items: Array, unprocessed: number}}
+ * @return {{items: Array, unprocessed: Array}}
  */
 function parseCardMessages(message) {
   // NFKC正規化: 全角英数字・全角記号・全角スペースを半角に揃える。
   // 「１，２３４」→「1,234」、「：」→「:」、「　」→「 」。
   const lines = message.getPlainBody().normalize("NFKC").split(/\r?\n/);
   const items = [];
-  let unprocessed = 0;
+  const unprocessed = [];
   let current = null;
 
-  /** 組み立て中の1件を確定させる。円の金額が無ければ未処理として数える。 */
+  /** 組み立て中の1件を確定させる。円の金額が無ければ未処理として記録する。 */
   const flush = function () {
     if (!current) {
       return;
@@ -145,7 +151,12 @@ function parseCardMessages(message) {
         external_key: hashExternalKey(message.getId() + ":" + items.length),
       });
     } else {
-      unprocessed += 1;
+      // 件数ではなくキー付きで送る。サーバ側が「どれを対応済みにしたか」を
+      // 1件ごとに覚えるため。キーは取り込み済みの分と衝突しないよう ":u" を挟む。
+      unprocessed.push({
+        key: hashExternalKey(message.getId() + ":u" + unprocessed.length),
+        occurred_at: current.occurred_at,
+      });
       console.warn(
         "円の金額が取れないため未処理: %s（通貨 %s）",
         message.getSubject(),
@@ -201,7 +212,7 @@ function parseCardMessages(message) {
   });
   flush();
 
-  if (items.length === 0 && unprocessed === 0) {
+  if (items.length === 0 && unprocessed.length === 0) {
     console.warn("解析できないメールをスキップ: %s", message.getSubject());
   }
   return { items: items, unprocessed: unprocessed };

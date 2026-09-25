@@ -566,15 +566,43 @@ async function loadIngestStatus() {
     return;
   }
 
-  const data = await response.json(); // { unprocessed, reported_at }
-  if (data.unprocessed > 0) {
-    ingestNotice.textContent =
-      `自動で取り込めなかったカード利用が ${data.unprocessed} 件あります。` +
-      `Gmail のラベル「${UNPROCESSED_LABEL}」を確認して手入力してください（外貨での利用など）。`;
-    ingestNotice.hidden = false;
-  } else {
+  const data = await response.json(); // { unprocessed, reported_at, dismissed_at }
+  if (data.unprocessed === 0) {
     ingestNotice.hidden = true;
+    return;
   }
+
+  ingestNotice.innerHTML = "";
+
+  const text = document.createElement("span");
+  text.textContent =
+    `自動で取り込めなかったカード利用が ${data.unprocessed} 件あります。` +
+    `Gmail のラベル「${UNPROCESSED_LABEL}」を確認して手入力してください（外貨での利用など）。`;
+
+  // 手入力を終えたら、この時刻をサーバに記録してお知らせを消す。
+  // 以後 GAS が報告してきても、これより古い未処理は数えられない。
+  const dismissBtn = document.createElement("button");
+  dismissBtn.type = "button";
+  dismissBtn.className = "dismiss-btn";
+  dismissBtn.textContent = "対応済みにする";
+  dismissBtn.addEventListener("click", async () => {
+    dismissBtn.disabled = true;
+    try {
+      const res = await apiFetch("/api/ingest/dismiss", { method: "POST" });
+      if (!res.ok) {
+        console.log("対応済みにできませんでした:", res.status);
+        dismissBtn.disabled = false;
+        return;
+      }
+    } catch (err) {
+      dismissBtn.disabled = false;
+      return;
+    }
+    ingestNotice.hidden = true;
+  });
+
+  ingestNotice.append(text, dismissBtn);
+  ingestNotice.hidden = false;
 }
 
 reloadBtn.addEventListener("click", () => {
