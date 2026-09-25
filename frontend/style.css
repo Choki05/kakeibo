@@ -36,6 +36,13 @@
   box-sizing: border-box;
 }
 
+/* hidden 属性は本来ブラウザ標準の [hidden]{display:none} で効くが、
+   作者のスタイル（例: .notice{display:flex}）の方が優先されるため打ち消されてしまう。
+   !important で必ず勝たせ、display を指定した要素でも hidden が効くようにする。 */
+[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
     "Noto Sans JP", system-ui, sans-serif;
