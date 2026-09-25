@@ -68,6 +68,17 @@ fieldset {
 .error {
   color: #c00;
 }
+
+/* 自動取り込みできなかったメールのお知らせ（目立つが警告ほど強くない色） */
+.notice {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-left: 4px solid #e6a417;
+  background: #fff6e0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
 .msg {
   color: var(--accent);
 }

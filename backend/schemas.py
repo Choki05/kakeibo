@@ -4,7 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from models import Direction, Method, Source, Status
 
-EXPENSE_CATEGORIES = {"食費", "娯楽費", "交際費", "その他"}
+UNCATEGORIZED = "未分類"
+EXPENSE_CATEGORIES = {"食費", "娯楽費", "交際費", "その他", UNCATEGORIZED}
 INCOME_CATEGORIES = {"給料", "おこづかい", "回収(食費)", "回収(交際費)", "その他"}
 
 EXPENSE_METHODS = {Method.paypay, Method.cash, Method.points}

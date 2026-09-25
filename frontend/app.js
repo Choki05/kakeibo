@@ -18,6 +18,9 @@ const CATEGORIES = {
 
 const TOKEN_KEY = "kakeibo_token";
 
+// GAS が取り込めなかったメールに付ける Gmail ラベル名（gas/main.js と合わせる）
+const UNPROCESSED_LABEL = "kakeibo/未処理";
+
 const loginView = document.getElementById("login-view");
 const appView = document.getElementById("app-view");
 
@@ -31,6 +34,7 @@ function showApp() {
   appView.hidden = false;
   if (!monthPicker.value) monthPicker.value = currentMonth();
   loadTransactions();
+  loadIngestStatus();
 }
 
 const loginForm = document.getElementById("login-form");
@@ -442,7 +446,36 @@ async function loadTransactions() {
   items.forEach((tx) => txList.appendChild(renderTx(tx)));
 }
 
-reloadBtn.addEventListener("click", loadTransactions);
+// メールから自動取り込みできなかった件数を表示する
+const ingestNotice = document.getElementById("ingest-notice");
+
+async function loadIngestStatus() {
+  let response;
+  try {
+    response = await apiFetch("/api/ingest/status");
+  } catch (err) {
+    return; // 401 のときは apiFetch がログイン画面へ戻している
+  }
+  if (!response.ok) {
+    console.log("取り込み状態の取得失敗:", response.status);
+    return;
+  }
+
+  const data = await response.json(); // { unprocessed, reported_at }
+  if (data.unprocessed > 0) {
+    ingestNotice.textContent =
+      `自動で取り込めなかったカード利用が ${data.unprocessed} 件あります。` +
+      `Gmail のラベル「${UNPROCESSED_LABEL}」を確認して手入力してください（外貨での利用など）。`;
+    ingestNotice.hidden = false;
+  } else {
+    ingestNotice.hidden = true;
+  }
+}
+
+reloadBtn.addEventListener("click", () => {
+  loadTransactions();
+  loadIngestStatus();
+});
 monthPicker.addEventListener("change", loadTransactions);
 
 function init() {

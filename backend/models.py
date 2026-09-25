@@ -36,6 +36,20 @@ class Status(str, enum.Enum):
     needs_review = "needs_review"
 
 
+class IngestState(Base):
+    """メール取り込みの状態を保持する。行は id=1 の1件だけ使う。
+
+    GAS が「円換算できず取り込めなかった件数」を報告してくる。
+    アプリ側はこれを読んで「未処理 N 件」と表示する。
+    """
+
+    __tablename__ = "ingest_state"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    unprocessed: Mapped[int] = mapped_column(default=0)
+    reported_at: Mapped[datetime] = mapped_column(DateTime, default=now_jst)
+
+
 class Transaction(Base):
     __tablename__ = "transactions"
     __table_args__ = (

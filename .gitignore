@@ -3,6 +3,7 @@ data/
 
 # --- 秘密情報 ---
 .env
+gas/.clasp.json
 
 # --- 作業メモ（公開しない）---
 docs/HANDOFF.md
