@@ -258,6 +258,15 @@ function renderTx(tx) {
   const line1 = document.createElement("div");
   line1.textContent = `${formatDateTime(tx.occurred_at)}　${tx.category}`;
 
+  // メール取り込みで未確認の行は目立たせる
+  if (tx.status === "needs_review") {
+    li.classList.add("needs-review");
+    const badge = document.createElement("span");
+    badge.className = "review-badge";
+    badge.textContent = "要確認";
+    line1.append(document.createTextNode("　"), badge);
+  }
+
   const amount = document.createElement("span");
   const sign = tx.direction === "expense" ? "-" : "+";
   amount.textContent = `${sign}¥${tx.amount.toLocaleString()}`;
@@ -269,6 +278,10 @@ function renderTx(tx) {
   line2.append(
     document.createTextNode(`　${METHOD_LABELS[tx.method] || tx.method}`)
   );
+  // 利用先はメール取り込みの行だけに入る。分類の手がかりになるので表示する。
+  if (tx.merchant) {
+    line2.append(document.createTextNode(`　${tx.merchant}`));
+  }
   if (tx.memo) {
     line2.append(document.createTextNode(`　${tx.memo}`));
   }
@@ -322,7 +335,16 @@ function renderTx(tx) {
 // セレクトを作る（options は {value,label} か 文字列 の配列）
 function makeSelect(options, selected) {
   const sel = document.createElement("select");
-  options.forEach((o) => {
+
+  // 現在の値が選択肢に無いとき（メール取り込みの credit_card / 未分類 など）は
+  // 先頭に足しておく。足さないと何も選択されず、ブラウザが先頭の項目を勝手に
+  // 選ぶため、保存した瞬間に値が別のものへ書き換わってしまう。
+  const values = options.map((o) => (typeof o === "string" ? o : o.value));
+  const list = values.includes(selected)
+    ? options
+    : [{ value: selected, label: METHOD_LABELS[selected] || selected }, ...options];
+
+  list.forEach((o) => {
     const value = typeof o === "string" ? o : o.value;
     const label = typeof o === "string" ? o : o.label;
     const opt = document.createElement("option");
@@ -384,6 +406,8 @@ function editTx(li, tx) {
       method: methodSel.value,
       category: categorySel.value,
       memo: memoInp.value.trim() || null,
+      // 編集して保存した＝内容を確認したということなので、要確認を解除する。
+      status: "confirmed",
     };
 
     let res;
@@ -418,13 +442,18 @@ function editTx(li, tx) {
   );
 }
 
-// 選択中の月の取引を取得して描画
+// 「要確認」だけを表示しているかどうか（true のときは月の絞り込みを無視する）
+let onlyNeedsReview = false;
+
+// 取引を取得して描画。要確認モードのときは月をまたいで未確認の行だけ出す
 async function loadTransactions() {
-  const month = monthPicker.value || currentMonth();
+  const query = onlyNeedsReview
+    ? "status=needs_review"
+    : `month=${monthPicker.value || currentMonth()}`;
 
   let response;
   try {
-    response = await apiFetch(`/api/transactions?month=${month}`);
+    response = await apiFetch(`/api/transactions?${query}`);
   } catch (err) {
     return; // 401 のときは apiFetch がログイン画面へ戻している
   }
@@ -438,13 +467,45 @@ async function loadTransactions() {
 
   if (items.length === 0) {
     const li = document.createElement("li");
-    li.textContent = "この月の記録はありません";
+    li.textContent = onlyNeedsReview
+      ? "要確認の記録はありません"
+      : "この月の記録はありません";
     txList.appendChild(li);
+  } else {
+    items.forEach((tx) => txList.appendChild(renderTx(tx)));
+  }
+
+  loadReviewCount();
+}
+
+// 要確認の件数を数えてボタンの表示を更新する
+const reviewFilterBtn = document.getElementById("review-filter-btn");
+
+async function loadReviewCount() {
+  let response;
+  try {
+    response = await apiFetch("/api/transactions?status=needs_review");
+  } catch (err) {
+    return;
+  }
+  if (!response.ok) {
     return;
   }
 
-  items.forEach((tx) => txList.appendChild(renderTx(tx)));
+  const count = (await response.json()).length;
+  if (onlyNeedsReview) {
+    reviewFilterBtn.textContent = "すべて表示";
+    reviewFilterBtn.hidden = false;
+  } else {
+    reviewFilterBtn.textContent = `要確認 ${count}件`;
+    reviewFilterBtn.hidden = count === 0;
+  }
 }
+
+reviewFilterBtn.addEventListener("click", () => {
+  onlyNeedsReview = !onlyNeedsReview;
+  loadTransactions();
+});
 
 // メールから自動取り込みできなかった件数を表示する
 const ingestNotice = document.getElementById("ingest-notice");

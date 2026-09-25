@@ -83,6 +83,21 @@ fieldset {
   color: var(--accent);
 }
 
+/* 未確認（メール取り込み直後）の行 */
+#tx-list li.needs-review {
+  border-left: 4px solid #e6a417;
+  padding-left: 8px;
+}
+
+.review-badge {
+  font-size: 0.75rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #e6a417;
+  color: #fff;
+  vertical-align: middle;
+}
+
 .list-header {
   display: flex;
   align-items: flex-end;
