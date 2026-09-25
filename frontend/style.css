@@ -71,12 +71,14 @@ h1 {
   color: var(--text-sub);
 }
 
-/* 1行ぶんの項目。ラベル左・入力右 */
+/* 1行ぶんの項目。ラベル左・入力右
+   min-height 48px は指で押しやすい大きさの目安（44px以上が推奨）。 */
 .row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 14px;
+  padding: 12px 14px;
+  min-height: 48px;
   margin: 0;
   /* 区切り線は行の下に引き、最後の行だけ消す */
   border-bottom: 1px solid var(--separator);
@@ -114,6 +116,7 @@ h1 {
 }
 
 /* ===== ボタン ===== */
+/* すべてのボタンは指で押せる大きさ（44px以上）を確保する */
 button {
   font-family: inherit;
   cursor: pointer;
@@ -121,8 +124,13 @@ button {
   border: 1px solid var(--separator);
   background: var(--card);
   color: var(--text);
-  padding: 9px 14px;
+  padding: 11px 16px;
+  min-height: 44px;
   font-size: 15px;
+  /* タップ時に文字が選択されたり、二重反応したりするのを防ぐ */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .primary-btn {
@@ -141,7 +149,7 @@ button {
   border: none;
   background: transparent;
   color: var(--accent);
-  padding: 6px 2px;
+  padding: 11px 4px;
   font-size: 15px;
 }
 
@@ -158,8 +166,9 @@ button {
   border: none;
   background: transparent;
   color: var(--text-sub);
-  padding: 8px;
-  font-size: 15px;
+  padding: 10px;
+  min-height: 44px;
+  font-size: 16px;
   font-weight: 600;
   border-radius: 8px;
 }
@@ -181,8 +190,9 @@ button {
 .choice-group button {
   background: var(--field);
   border: 1px solid transparent;
-  padding: 7px 14px;
-  font-size: 14px;
+  padding: 11px 18px;
+  min-height: 44px;
+  font-size: 15px;
   border-radius: 999px;
 }
 .choice-group button.selected {
@@ -206,8 +216,9 @@ button {
   background: var(--card);
   color: var(--text);
   border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 15px;
+  padding: 11px 12px;
+  min-height: 44px;
+  font-size: 16px;
   font-family: inherit;
 }
 
@@ -217,8 +228,8 @@ button {
 }
 
 .chip-btn {
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 11px 14px;
+  font-size: 15px;
 }
 .chip-btn.review {
   background: var(--warn);
@@ -235,11 +246,28 @@ button {
 }
 
 #tx-list li {
-  padding: 12px 14px;
+  padding: 14px;
+  min-height: 60px;
   border-bottom: 1px solid var(--separator);
 }
 #tx-list li:last-child {
   border-bottom: none;
+}
+
+/* 行全体がタップできる（押すと編集に入る） */
+#tx-list li.tappable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#tx-list li.tappable:active {
+  background: var(--field);
+}
+
+.tx-chevron {
+  color: var(--text-sub);
+  font-size: 1.3rem;
+  line-height: 1;
+  margin-left: 2px;
 }
 
 /* 1行目：左に内容、右に金額 */
@@ -295,16 +323,16 @@ button {
   vertical-align: middle;
 }
 
-/* 行の操作ボタン */
+/* 編集中の操作ボタン（保存・キャンセル・削除） */
 .tx-actions {
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 4px;
 }
-.edit-btn,
-.del-btn {
-  font-size: 13px;
-  padding: 5px 12px;
+.tx-actions button {
+  flex: 1;
+  padding: 11px 8px;
+  font-size: 15px;
   background: var(--field);
   border: none;
 }
@@ -321,7 +349,8 @@ button {
 .tx-edit input,
 .tx-edit select {
   width: 100%;
-  padding: 9px 10px;
+  padding: 11px 12px;
+  min-height: 44px;
   font-size: 16px;
   font-family: inherit;
   border: 1px solid var(--separator);

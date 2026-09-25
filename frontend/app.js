@@ -277,9 +277,14 @@ function renderTx(tx) {
     tx.direction === "expense" ? "amount-expense" : "amount-income"
   }`;
 
+  // タップできることを示す矢印
+  const chevron = document.createElement("span");
+  chevron.className = "tx-chevron";
+  chevron.textContent = "›";
+
   const line1 = document.createElement("div");
   line1.className = "tx-main";
-  line1.append(title, amount);
+  line1.append(title, amount, chevron);
 
   // 2行目：日時・支払い方法・利用先・メモを「・」でつなぐ
   // 利用先はメール取り込みの行だけに入る。分類の手がかりになるので表示する。
@@ -295,53 +300,15 @@ function renderTx(tx) {
   line2.className = "tx-sub";
   line2.textContent = parts.join("・");
 
-  // --- 編集ボタン ---
-  const editBtn = document.createElement("button");
-  editBtn.type = "button";
-  editBtn.textContent = "編集";
-  editBtn.className = "edit-btn";
-  editBtn.addEventListener("click", () => editTx(li, tx));
-
-  // --- 削除ボタン（2クリック確認） ---
-  const delBtn = document.createElement("button");
-  delBtn.type = "button";
-  delBtn.textContent = "削除";
-  delBtn.className = "del-btn";
-
-  let armed = false;
-  let timer = null;
-
-  delBtn.addEventListener("click", async () => {
-    if (!armed) {
-      armed = true;
-      delBtn.textContent = "本当に削除？";
-      timer = setTimeout(() => {
-        armed = false;
-        delBtn.textContent = "削除";
-      }, 3000);
-      return;
-    }
-
-    clearTimeout(timer);
-    try {
-      const res = await apiFetch(`/api/transactions/${tx.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        console.log("削除失敗:", res.status);
-        return;
-      }
-    } catch (err) {
-      return;
-    }
-    loadTransactions();
+  // 行のどこを押しても編集に入れる（小さなボタンを狙わなくて済む）。
+  // 編集中は中身のクリックがここへ伝わってくるので、その間は無視する。
+  li.classList.add("tappable");
+  li.addEventListener("click", () => {
+    if (li.classList.contains("editing")) return;
+    editTx(li, tx);
   });
 
-  const actions = document.createElement("div");
-  actions.className = "tx-actions";
-  actions.append(editBtn, delBtn);
-
-  li.append(line1, line2, actions);
+  li.append(line1, line2);
   return li;
 }
 
@@ -372,6 +339,9 @@ function makeSelect(options, selected) {
 // 行を編集フォームに切り替える
 function editTx(li, tx) {
   li.innerHTML = "";
+  // 行のクリックで再び editTx が呼ばれないようにする目印
+  li.classList.add("editing");
+  li.classList.remove("tappable");
 
   const amountInp = document.createElement("input");
   amountInp.type = "number";
@@ -449,9 +419,45 @@ function editTx(li, tx) {
   const box = document.createElement("div");
   box.className = "tx-edit";
 
+  // --- 削除ボタン（2回タップで確定）---
+  // 一覧では出さず、編集中だけ出す。誤って消すのを防ぐため。
+  const delBtn = document.createElement("button");
+  delBtn.type = "button";
+  delBtn.textContent = "削除";
+  delBtn.className = "del-btn";
+
+  let armed = false;
+  let timer = null;
+
+  delBtn.addEventListener("click", async () => {
+    if (!armed) {
+      armed = true;
+      delBtn.textContent = "本当に削除？";
+      timer = setTimeout(() => {
+        armed = false;
+        delBtn.textContent = "削除";
+      }, 3000);
+      return;
+    }
+
+    clearTimeout(timer);
+    try {
+      const res = await apiFetch(`/api/transactions/${tx.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        console.log("削除失敗:", res.status);
+        return;
+      }
+    } catch (err) {
+      return;
+    }
+    loadTransactions();
+  });
+
   const buttons = document.createElement("div");
   buttons.className = "tx-actions";
-  buttons.append(saveBtn, cancelBtn);
+  buttons.append(saveBtn, cancelBtn, delBtn);
 
   box.append(amountInp, dtInp, methodSel, categorySel, memoInp, buttons, msg);
   li.append(box);
