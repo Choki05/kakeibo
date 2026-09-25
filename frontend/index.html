@@ -7,18 +7,20 @@
         <link rel="stylesheet" href="/style.css" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0d7aa8" />
-
     </head>
     <body>
         <!--ログイン画面-->
         <section id="login-view">
             <h1>家計簿</h1>
             <form id="login-form">
-                <label>
-                    パスワード
-                    <input type="password" id="login-password" autocomplete="-current-password" required />
-                </label>
-                <button type="submit">ログイン</button>
+                <!--group = 角丸の箱。その中の row が1行ぶんの項目-->
+                <div class="group">
+                    <label class="row">
+                        <span class="row-label">パスワード</span>
+                        <input type="password" id="login-password" autocomplete="current-password" required />
+                    </label>
+                </div>
+                <button type="submit" class="primary-btn">ログイン</button>
                 <p id="login-error" class="error" hidden></p>
             </form>
         </section>
@@ -27,57 +29,57 @@
         <section id="app-view" hidden>
             <header class="app-header">
                 <h1>家計簿</h1>
-                <button type="button" id="logout-btn">ログアウト</button>
+                <button type="button" id="logout-btn" class="plain-btn">ログアウト</button>
             </header>
 
             <!--メールから自動取り込みできなかった件数のお知らせ-->
             <p id="ingest-notice" class="notice" hidden></p>
 
             <form id="tx-form">
-                <div class="direction-toggle">
+                <div class="segmented" role="group" aria-label="種別">
                     <button type="button" data-direction="expense" class="active">支出</button>
                     <button type="button" data-direction="income">収入</button>
                 </div>
 
-                <label>
-                    金額(円)
-                    <input type="number" id="amount" min="1" step="1" required />
-                </label>
+                <div class="group">
+                    <label class="row">
+                        <span class="row-label">金額</span>
+                        <input type="number" id="amount" min="1" step="1" inputmode="numeric" placeholder="0" required />
+                        <span class="row-unit">円</span>
+                    </label>
+                    <label class="row">
+                        <span class="row-label">日時</span>
+                        <input type="datetime-local" id="occurred-at" required />
+                    </label>
+                    <label class="row">
+                        <span class="row-label">メモ</span>
+                        <input type="text" id="memo" maxlength="255" placeholder="任意" />
+                    </label>
+                </div>
 
-                <label>
-                    日時
-                    <input type="datetime-local" id="occurred-at" required />
-                </label>
-
-                <fieldset>
-                    <legend>支払い方法</legend>
+                <p class="group-title">支払い方法</p>
+                <div class="group group-chips">
                     <div id="method-buttons" class="choice-group"></div>
-                </fieldset>
+                </div>
 
-                <fieldset>
-                    <legend>カテゴリ</legend>
+                <p class="group-title">カテゴリ</p>
+                <div class="group group-chips">
                     <div id="category-buttons" class="choice-group"></div>
-                </fieldset>
+                </div>
 
-                <label>
-                    メモ（任意）
-                    <input type="text" id="memo" maxlength="255" />
-                </label>
-
-                <button type="submit">保存</button>
+                <button type="submit" class="primary-btn">保存</button>
                 <p id="tx-form-msg" class="msg" hidden></p>
             </form>
 
             <!--一覧-->
             <div class="list-header">
-                <label>
-                    月
-                    <input type="month" id="month-picker" />
-                </label>
-                <button type="button" id="reload-btn">更新</button>
-                <button type="button" id="review-filter-btn" hidden></button>
+                <input type="month" id="month-picker" class="month-input" />
+                <div class="list-header-actions">
+                    <button type="button" id="review-filter-btn" class="chip-btn review" hidden></button>
+                    <button type="button" id="reload-btn" class="chip-btn">更新</button>
+                </div>
             </div>
-            <ul id="tx-list"></ul>
+            <ul id="tx-list" class="group"></ul>
         </section>
         <script src="/app.js"></script>
     </body>

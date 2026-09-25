@@ -8,7 +8,9 @@ UNCATEGORIZED = "未分類"
 EXPENSE_CATEGORIES = {"食費", "娯楽費", "交際費", "その他", UNCATEGORIZED}
 INCOME_CATEGORIES = {"給料", "おこづかい", "回収(食費)", "回収(交際費)", "その他"}
 
-EXPENSE_METHODS = {Method.paypay, Method.cash, Method.points}
+# credit_card は当初メール取り込み専用にしていたが、海外利用など自動で取り込めない
+# カード決済を手入力する必要があるため、M6 で手入力も許可した。
+EXPENSE_METHODS = {Method.paypay, Method.cash, Method.points, Method.credit_card}
 INCOME_METHODS = {Method.bank_transfer, Method.paypay, Method.cash}
 
 class TransactionCreate(BaseModel):
@@ -44,6 +46,9 @@ class TransactionUpdate(BaseModel):
     category: str | None = None
     memo: str | None = None
     status: Status | None = None
+    # メール由来の利用先。編集時にメモへ移したあと null を送って消せるようにする。
+    # model_dump(exclude_unset=True) なので「送らなければ変更なし」のまま。
+    merchant: str | None = Field(default=None, max_length=255)
 
 class TransactionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)

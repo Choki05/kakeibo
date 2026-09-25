@@ -84,6 +84,9 @@ def ingest_email(payload: EmailIngestRequest, db: Session = Depends(get_db)):
             amount=item.amount,
             method=Method.credit_card,
             category=UNCATEGORIZED,
+            # 利用先はメモにも入れる。画面に出るのはメモなので、ユーザーが
+            # 書き換えたり消したりできる。merchant 側はメール由来の元データとして残す。
+            memo=item.merchant,
             merchant=item.merchant,
             external_key=item.external_key,
             source=Source.email,

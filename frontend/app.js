@@ -3,6 +3,7 @@ const METHODS = {
         { value: "paypay", label: "PayPay" },
         { value: "cash", label: "現金" },
         { value: "points", label: "ポイント" },
+        { value: "credit_card", label: "カード" },
     ],
     income: [
         { value: "bank_transfer", label: "銀行振込" },
@@ -90,7 +91,7 @@ let currentDirection = "expense"
 let selectedMethod = null;
 let selectedCategory = null;
 
-const directionButtons = document.querySelectorAll(".direction-toggle button");
+const directionButtons = document.querySelectorAll(".segmented button");
 const methodButtons = document.getElementById("method-buttons");
 const categoryButtons = document.getElementById("category-buttons");
 const occurredAt = document.getElementById("occurred-at");
@@ -255,36 +256,44 @@ function formatDateTime(iso) {
 function renderTx(tx) {
   const li = document.createElement("li");
 
-  const line1 = document.createElement("div");
-  line1.textContent = `${formatDateTime(tx.occurred_at)}　${tx.category}`;
+  // 1行目左：カテゴリ（＋未確認バッジ）
+  const title = document.createElement("div");
+  title.className = "tx-title";
+  title.textContent = tx.category;
 
-  // メール取り込みで未確認の行は目立たせる
   if (tx.status === "needs_review") {
     li.classList.add("needs-review");
     const badge = document.createElement("span");
     badge.className = "review-badge";
     badge.textContent = "要確認";
-    line1.append(document.createTextNode("　"), badge);
+    title.append(badge);
   }
 
-  const amount = document.createElement("span");
+  // 1行目右：金額
+  const amount = document.createElement("div");
   const sign = tx.direction === "expense" ? "-" : "+";
   amount.textContent = `${sign}¥${tx.amount.toLocaleString()}`;
-  amount.className =
-    tx.direction === "expense" ? "amount-expense" : "amount-income";
+  amount.className = `tx-amount ${
+    tx.direction === "expense" ? "amount-expense" : "amount-income"
+  }`;
+
+  const line1 = document.createElement("div");
+  line1.className = "tx-main";
+  line1.append(title, amount);
+
+  // 2行目：日時・支払い方法・利用先・メモを「・」でつなぐ
+  // 利用先はメール取り込みの行だけに入る。分類の手がかりになるので表示する。
+  const parts = [
+    formatDateTime(tx.occurred_at),
+    METHOD_LABELS[tx.method] || tx.method,
+  ];
+  // 利用先は取り込み時にメモへ入れてある。画面に出すのはメモだけにして、
+  // ユーザーが書き換え・削除できるようにする（merchant は元データとして保持）。
+  if (tx.memo) parts.push(tx.memo);
 
   const line2 = document.createElement("div");
-  line2.append(amount);
-  line2.append(
-    document.createTextNode(`　${METHOD_LABELS[tx.method] || tx.method}`)
-  );
-  // 利用先はメール取り込みの行だけに入る。分類の手がかりになるので表示する。
-  if (tx.merchant) {
-    line2.append(document.createTextNode(`　${tx.merchant}`));
-  }
-  if (tx.memo) {
-    line2.append(document.createTextNode(`　${tx.memo}`));
-  }
+  line2.className = "tx-sub";
+  line2.textContent = parts.join("・");
 
   // --- 編集ボタン ---
   const editBtn = document.createElement("button");
@@ -328,7 +337,11 @@ function renderTx(tx) {
     loadTransactions();
   });
 
-  li.append(line1, line2, editBtn, delBtn);
+  const actions = document.createElement("div");
+  actions.className = "tx-actions";
+  actions.append(editBtn, delBtn);
+
+  li.append(line1, line2, actions);
   return li;
 }
 
@@ -376,7 +389,10 @@ function editTx(li, tx) {
   const memoInp = document.createElement("input");
   memoInp.type = "text";
   memoInp.maxLength = 255;
+  // メール由来の行は取り込み時に利用先がメモへ入っているので、そのまま出せば
+  // 書き換え・削除ができる。
   memoInp.value = tx.memo || "";
+  memoInp.placeholder = "メモ";
 
   const saveBtn = document.createElement("button");
   saveBtn.type = "button";
@@ -430,16 +446,15 @@ function editTx(li, tx) {
     loadTransactions();
   });
 
-  li.append(
-    amountInp,
-    dtInp,
-    methodSel,
-    categorySel,
-    memoInp,
-    saveBtn,
-    cancelBtn,
-    msg
-  );
+  const box = document.createElement("div");
+  box.className = "tx-edit";
+
+  const buttons = document.createElement("div");
+  buttons.className = "tx-actions";
+  buttons.append(saveBtn, cancelBtn);
+
+  box.append(amountInp, dtInp, methodSel, categorySel, memoInp, buttons, msg);
+  li.append(box);
 }
 
 // 「要確認」だけを表示しているかどうか（true のときは月の絞り込みを無視する）

@@ -1,61 +1,353 @@
+/* =========================================================
+   色は変数にまとめ、ダークモードでは変数だけを差し替える。
+   個々の要素の指定を書き換えずに配色を切り替えられる。
+   ========================================================= */
 :root {
   --accent: #0d7aa8;
+  --bg: #f2f2f7;          /* 画面の下地（薄いグレー） */
+  --card: #ffffff;        /* グループの箱 */
+  --text: #1c1c1e;
+  --text-sub: #8a8a8e;    /* 補足情報 */
+  --separator: #e3e3e8;   /* 行と行の区切り線 */
+  --expense: #d0342c;
+  --income: #0a84c4;
+  --warn: #e6a417;
+  --warn-bg: #fff6e0;
+  --field: #f7f7fa;       /* 入力欄の背景（チップ等） */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #3aaede;
+    --bg: #000000;
+    --card: #1c1c1e;
+    --text: #f2f2f7;
+    --text-sub: #98989f;
+    --separator: #2f2f33;
+    --expense: #ff6b60;
+    --income: #4db8ec;
+    --warn: #e6a417;
+    --warn-bg: #3a2f14;
+    --field: #2c2c2e;
+  }
 }
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: system-ui, sans-serif;
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 16px;
-    line-height: 1.5;
-    color: #222;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+    "Noto Sans JP", system-ui, sans-serif;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
 }
 
 h1 {
-    font-size: 1.4rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 4px 0 16px;
 }
 
-input {
-    width: 100%;
-    padding: 8px;
-    font-size: 16px;
-    margin-top: 4px;
+/* ===== グループ（角丸の箱）とその中の行 ===== */
+.group {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 0 20px;
 }
 
-label {
-  display: block;
-  margin: 12px 0;
+/* グループの見出し（小さいグレー文字） */
+.group-title {
+  margin: 0 0 6px 14px;
+  font-size: 0.78rem;
+  color: var(--text-sub);
 }
 
+/* 1行ぶんの項目。ラベル左・入力右 */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  margin: 0;
+  /* 区切り線は行の下に引き、最後の行だけ消す */
+  border-bottom: 1px solid var(--separator);
+}
+.row:last-child {
+  border-bottom: none;
+}
+
+.row-label {
+  flex: 0 0 4.5em;
+  font-size: 0.95rem;
+}
+
+.row-unit {
+  color: var(--text-sub);
+  font-size: 0.9rem;
+}
+
+/* 入力欄は枠を消して行に溶け込ませる（iOS の設定画面のような見た目） */
+.row input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 16px; /* 16px 未満だと iOS で自動ズームするので下げない */
+  text-align: right;
+  padding: 0;
+}
+.row input:focus {
+  outline: none;
+}
+.row input::placeholder {
+  color: var(--text-sub);
+}
+
+/* ===== ボタン ===== */
 button {
-  padding: 10px 16px;
-  font-size: 15px;
+  font-family: inherit;
   cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid var(--separator);
+  background: var(--card);
+  color: var(--text);
+  padding: 9px 14px;
+  font-size: 15px;
 }
 
-.direction-toggle,
+.primary-btn {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin: 4px 0 20px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.plain-btn {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  padding: 6px 2px;
+  font-size: 15px;
+}
+
+/* 支出/収入の切り替え（セグメンテッドコントロール） */
+.segmented {
+  display: flex;
+  background: var(--field);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 20px;
+}
+.segmented button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-sub);
+  padding: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.segmented button.active {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+}
+
+/* 支払い方法・カテゴリの選択チップ */
+.group-chips {
+  padding: 12px 14px;
+}
 .choice-group {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 4px;
 }
-
-/* 選択中のボタンを強調（.active＝支出収入トグル、.selected＝方法・カテゴリ） */
-.direction-toggle button.active,
+.choice-group button {
+  background: var(--field);
+  border: 1px solid transparent;
+  padding: 7px 14px;
+  font-size: 14px;
+  border-radius: 999px;
+}
 .choice-group button.selected {
   background: var(--accent);
-  color: #fff;
   border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
 }
 
-fieldset {
-  margin: 12px 0;
-  border: 1px solid #ccc;
+/* ===== 一覧のヘッダー ===== */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 28px 0 10px;
+}
+
+.month-input {
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.list-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.chip-btn {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.chip-btn.review {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ===== 取引一覧 ===== */
+#tx-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#tx-list li {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--separator);
+}
+#tx-list li:last-child {
+  border-bottom: none;
+}
+
+/* 1行目：左に内容、右に金額 */
+.tx-main {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tx-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+/* 日時・支払い方法・利用先・メモをまとめた補足行 */
+.tx-sub {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  word-break: break-word;
+}
+
+.tx-amount {
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: nowrap;
+  /* 数字の幅を揃えて、金額の桁を読み比べやすくする */
+  font-variant-numeric: tabular-nums;
+}
+
+.amount-expense {
+  color: var(--expense);
+}
+.amount-income {
+  color: var(--income);
+}
+
+/* 未確認（メール取り込み直後）の行 */
+#tx-list li.needs-review {
+  border-left: 3px solid var(--warn);
+}
+
+.review-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--warn);
+  color: #fff;
+  vertical-align: middle;
+}
+
+/* 行の操作ボタン */
+.tx-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.edit-btn,
+.del-btn {
+  font-size: 13px;
+  padding: 5px 12px;
+  background: var(--field);
+  border: none;
+}
+.del-btn {
+  color: var(--expense);
+}
+
+/* 行内編集フォーム */
+.tx-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tx-edit input,
+.tx-edit select {
+  width: 100%;
+  padding: 9px 10px;
+  font-size: 16px;
+  font-family: inherit;
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+}
+
+/* ===== お知らせ・メッセージ ===== */
+.notice {
+  margin: 0 0 20px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--warn);
+  background: var(--warn-bg);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.error {
+  color: var(--expense);
+  font-size: 0.9rem;
+}
+
+.msg {
+  color: var(--accent);
+  font-size: 0.9rem;
 }
 
 /* ヘッダー：タイトルとログアウトを左右に分ける */
@@ -64,75 +356,6 @@ fieldset {
   justify-content: space-between;
   align-items: center;
 }
-
-.error {
-  color: #c00;
-}
-
-/* 自動取り込みできなかったメールのお知らせ（目立つが警告ほど強くない色） */
-.notice {
-  margin: 8px 0 0;
-  padding: 8px 12px;
-  border-left: 4px solid #e6a417;
-  background: #fff6e0;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-.msg {
-  color: var(--accent);
-}
-
-/* 未確認（メール取り込み直後）の行 */
-#tx-list li.needs-review {
-  border-left: 4px solid #e6a417;
-  padding-left: 8px;
-}
-
-.review-badge {
-  font-size: 0.75rem;
-  padding: 1px 6px;
-  border-radius: 10px;
-  background: #e6a417;
-  color: #fff;
-  vertical-align: middle;
-}
-
-.list-header {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  margin-top: 24px;
-}
-
-#tx-list {
-  list-style: none;
-  padding: 0;
-}
-#tx-list li {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px;
-  margin: 8px 0;
-}
-
-.amount-expense {
-  color: #c00;
-}
-.amount-income {
-  color: #06c;
-}
-
-.edit-btn {
-  margin-top: 6px;
-  margin-right: 6px;
-  font-size: 13px;
-  padding: 4px 10px;
-}
-
-.del-btn {
-  margin-top: 6px;
-  font-size: 13px;
-  padding: 4px 10px;
-  color: #c00;
+.app-header h1 {
+  margin: 4px 0;
 }
