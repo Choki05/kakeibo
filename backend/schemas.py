@@ -67,3 +67,26 @@ class TransactionRead(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
+class CategoryAmount(BaseModel):
+    """カテゴリ1つぶんの集計結果。"""
+
+    category: str
+    amount: int
+    count: int
+
+
+class SummaryRead(BaseModel):
+    """月ごとの集計。
+
+    needs_review も含めて集計する。確定分だけに絞ると、メール由来の行が
+    大半を占める現状では集計がほぼ空になって使えないため（M7 で決定）。
+    """
+
+    month: str
+    income_total: int
+    expense_total: int
+    balance: int
+    needs_review_count: int
+    expense_by_category: list[CategoryAmount]
+    income_by_category: list[CategoryAmount]

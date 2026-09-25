@@ -34,6 +34,7 @@ function showApp() {
   loginView.hidden = true;
   appView.hidden = false;
   if (!monthPicker.value) monthPicker.value = currentMonth();
+  showTab("input");
   loadTransactions();
   loadIngestStatus();
 }
@@ -520,6 +521,9 @@ async function loadTransactions() {
   }
 
   loadReviewCount();
+  // 明細が変わったら集計もずれるので、必ず一緒に読み直す。
+  // 保存・編集・削除のあとは必ずここを通るため、更新漏れが起きない。
+  loadSummary();
 }
 
 // 要確認の件数を数えてボタンの表示を更新する
@@ -610,6 +614,142 @@ reloadBtn.addEventListener("click", () => {
   loadIngestStatus();
 });
 monthPicker.addEventListener("change", loadTransactions);
+
+// ===== タブ切り替え =====
+// 「いま表示しているタブ」を引数1つで表し、各パネルの hidden を付け外しする。
+// パネルごとに個別のフラグを持つと、2つ同時に表示される状態を作れてしまう。
+const tabButtons = document.querySelectorAll(".tabs button");
+const panels = {
+  input: document.getElementById("panel-input"),
+  summary: document.getElementById("panel-summary"),
+};
+
+function showTab(name) {
+  Object.entries(panels).forEach(([key, panel]) => {
+    panel.hidden = key !== name;
+  });
+  tabButtons.forEach((btn) => {
+    const active = btn.dataset.tab === name;
+    btn.classList.toggle("active", active);
+    // 見た目だけでなく支援技術にも選択状態を伝える
+    btn.setAttribute("aria-selected", String(active));
+  });
+}
+
+tabButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    showTab(btn.dataset.tab);
+    // 集計タブを開いた時点の最新の数字を見せる
+    if (btn.dataset.tab === "summary") loadTransactions();
+  });
+});
+
+// ===== 集計 =====
+const sumIncome = document.getElementById("sum-income");
+const sumExpense = document.getElementById("sum-expense");
+const sumBalance = document.getElementById("sum-balance");
+const sumReviewNote = document.getElementById("sum-review-note");
+const sumExpenseList = document.getElementById("sum-expense-list");
+const sumIncomeList = document.getElementById("sum-income-list");
+
+function formatYen(n) {
+  return `¥${n.toLocaleString()}`;
+}
+
+// カテゴリ別の内訳を <li> の並びにする。
+// total は「合計に対する割合」の帯を描くための分母。
+function renderBreakdown(list, items, total, color) {
+  list.innerHTML = "";
+
+  if (items.length === 0) {
+    const li = document.createElement("li");
+    li.className = "sum-empty";
+    li.textContent = "記録はありません";
+    list.appendChild(li);
+    return;
+  }
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+
+    const row = document.createElement("div");
+    row.className = "sum-row";
+
+    const label = document.createElement("span");
+    label.className = "sum-label";
+    label.textContent = item.category;
+
+    const count = document.createElement("span");
+    count.className = "sum-count";
+    count.textContent = `${item.count}件`;
+    label.appendChild(count);
+
+    const amount = document.createElement("span");
+    amount.className = "tx-amount";
+    amount.textContent = formatYen(item.amount);
+
+    row.append(label, amount);
+
+    // 簡易な棒グラフ。ライブラリを使わず div の幅を % で指定するだけ。
+    const bar = document.createElement("div");
+    bar.className = "sum-bar";
+    const fill = document.createElement("div");
+    fill.className = "sum-bar-fill";
+    fill.style.width = total > 0 ? `${(item.amount / total) * 100}%` : "0%";
+    fill.style.background = color;
+    bar.appendChild(fill);
+
+    li.append(row, bar);
+    list.appendChild(li);
+  });
+}
+
+async function loadSummary() {
+  const month = monthPicker.value || currentMonth();
+
+  let response;
+  try {
+    response = await apiFetch(`/api/summary?month=${month}`);
+  } catch (err) {
+    return; // 401 のときは apiFetch がログイン画面へ戻している
+  }
+  if (!response.ok) {
+    console.log("集計取得失敗:", response.status);
+    return;
+  }
+
+  const data = await response.json();
+
+  sumIncome.textContent = formatYen(data.income_total);
+  sumExpense.textContent = formatYen(data.expense_total);
+  sumBalance.textContent = formatYen(data.balance);
+  // 収支は符号で色を変える（プラスは収入色・マイナスは支出色・ゼロは無色）
+  sumBalance.classList.toggle("amount-income", data.balance > 0);
+  sumBalance.classList.toggle("amount-expense", data.balance < 0);
+
+  // 集計には未確認の金額が混じる。カード通知は速報（承認額）なので
+  // 確定額とずれることがあり、それを承知で見てもらうための注意書き。
+  if (data.needs_review_count > 0) {
+    sumReviewNote.textContent =
+      `未確認 ${data.needs_review_count}件を含む金額です（カード通知は速報のため確定額とずれることがあります）`;
+    sumReviewNote.hidden = false;
+  } else {
+    sumReviewNote.hidden = true;
+  }
+
+  renderBreakdown(
+    sumExpenseList,
+    data.expense_by_category,
+    data.expense_total,
+    "var(--expense)"
+  );
+  renderBreakdown(
+    sumIncomeList,
+    data.income_by_category,
+    data.income_total,
+    "var(--income)"
+  );
+}
 
 function init() {
   const token = localStorage.getItem(TOKEN_KEY);

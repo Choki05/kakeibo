@@ -492,3 +492,113 @@ button {
 .app-header h1 {
   margin: 4px 0;
 }
+
+/* ===== タブ（入力 / 集計） ===== */
+/* フォーム内の .segmented（丸いピル型）と見た目が同じだと混同するため、
+   タブは下線タイプにして役割の違いを見せる。 */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--separator);
+  margin-bottom: 20px;
+}
+.tabs button {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-sub);
+  min-height: 46px;
+  font-size: 16px;
+  font-weight: 600;
+  /* 選択時に下線が出ても高さが変わらないよう、非選択でも同じ太さを透明で確保する */
+  border-bottom: 2px solid transparent;
+}
+.tabs button.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* 集計タブの先頭要素なので、一覧ヘッダーの上余白は詰める */
+#panel-summary .list-header {
+  margin-top: 0;
+}
+
+/* ===== 集計 ===== */
+/* ラベル左・金額右の1行。区切り線は「2番目以降の行の上」に引くことで、
+   最後の行だけ消す指定（:last-child）が要らなくなる。 */
+.sum-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  min-height: 48px;
+  margin: 0;
+}
+.summary-totals .sum-row + .sum-row {
+  border-top: 1px solid var(--separator);
+}
+
+.sum-label {
+  font-size: 0.95rem;
+}
+
+/* 件数は金額の添え物なので小さいグレー */
+.sum-count {
+  margin-left: 6px;
+  font-size: 0.78rem;
+  color: var(--text-sub);
+}
+
+/* 収支の行は結論なので太く見せる */
+.sum-row-total .sum-label {
+  font-weight: 700;
+}
+
+/* 「未確認 N件を含む」の注意書き。合計の箱の中に入れて、
+   どの数字に対する注意なのかを迷わせない。 */
+.sum-note {
+  margin: 0;
+  padding: 10px 14px 12px;
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  border-top: 1px solid var(--separator);
+}
+
+/* ===== カテゴリ別の内訳 ===== */
+.breakdown {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+.breakdown li + li {
+  border-top: 1px solid var(--separator);
+}
+.breakdown li {
+  padding: 2px 0 10px;
+}
+/* 内訳は帯とセットで1件なので、行そのものは合計欄より低くていい */
+.breakdown .sum-row {
+  min-height: 40px;
+}
+.breakdown .sum-empty {
+  padding: 14px;
+  font-size: 0.9rem;
+  color: var(--text-sub);
+}
+
+/* 合計に対する割合の帯。ライブラリを使わず幅の % だけで描く簡易グラフ。 */
+.sum-bar {
+  height: 4px;
+  margin: 0 14px;
+  border-radius: 2px;
+  background: var(--field);
+  overflow: hidden;
+}
+.sum-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  /* 金額が 0 に近いカテゴリでも帯が見えるようにする */
+  min-width: 2px;
+}

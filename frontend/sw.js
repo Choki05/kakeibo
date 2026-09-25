@@ -1,6 +1,6 @@
 // フロントのファイルを変更したら、この番号を必ず上げること。
 // 上げないと activate で古いキャッシュが消えず、端末は古い画面を表示し続ける。
-const CACHE_NAME = "kakeibo-v8"
+const CACHE_NAME = "kakeibo-v9"
 
 const APP_SHELL = [
   "/",

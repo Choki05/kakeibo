@@ -32,55 +32,93 @@
                 <button type="button" id="logout-btn" class="plain-btn">ログアウト</button>
             </header>
 
-            <!--メールから自動取り込みできなかった件数のお知らせ-->
+            <!--メールから自動取り込みできなかった件数のお知らせ。
+                警告はタブに隠れてはいけないので、タブの外に置く-->
             <p id="ingest-notice" class="notice" hidden></p>
 
-            <form id="tx-form">
-                <div class="segmented" role="group" aria-label="種別">
-                    <button type="button" data-direction="expense" class="active">支出</button>
-                    <button type="button" data-direction="income">収入</button>
-                </div>
-
-                <div class="group">
-                    <label class="row">
-                        <span class="row-label">金額</span>
-                        <input type="number" id="amount" min="1" step="1" inputmode="numeric" placeholder="0" required />
-                        <span class="row-unit">円</span>
-                    </label>
-                    <!--日時は横並びだと端末によって表示が切れるので、ラベルを上に置く-->
-                    <label class="row row-stack">
-                        <span class="row-label">日時</span>
-                        <input type="datetime-local" id="occurred-at" required />
-                    </label>
-                    <label class="row">
-                        <span class="row-label">メモ</span>
-                        <input type="text" id="memo" maxlength="255" placeholder="任意" />
-                    </label>
-                </div>
-
-                <p class="group-title">支払い方法</p>
-                <div class="group group-chips">
-                    <div id="method-buttons" class="choice-group"></div>
-                </div>
-
-                <p class="group-title">カテゴリ</p>
-                <div class="group group-chips">
-                    <div id="category-buttons" class="choice-group"></div>
-                </div>
-
-                <button type="submit" class="primary-btn">保存</button>
-                <p id="tx-form-msg" class="msg" hidden></p>
-            </form>
-
-            <!--一覧-->
-            <div class="list-header">
-                <input type="month" id="month-picker" class="month-input" />
-                <div class="list-header-actions">
-                    <button type="button" id="review-filter-btn" class="chip-btn review" hidden></button>
-                    <button type="button" id="reload-btn" class="chip-btn">更新</button>
-                </div>
+            <!--タブ。入力＝記録する / 集計＝見る-->
+            <div class="tabs" role="tablist">
+                <button type="button" data-tab="input" class="active" role="tab" aria-selected="true" aria-controls="panel-input">入力</button>
+                <button type="button" data-tab="summary" role="tab" aria-selected="false" aria-controls="panel-summary">集計</button>
             </div>
-            <ul id="tx-list" class="group"></ul>
+
+            <!--=== 入力タブ ===-->
+            <div id="panel-input" role="tabpanel">
+                <form id="tx-form">
+                    <div class="segmented" role="group" aria-label="種別">
+                        <button type="button" data-direction="expense" class="active">支出</button>
+                        <button type="button" data-direction="income">収入</button>
+                    </div>
+
+                    <div class="group">
+                        <label class="row">
+                            <span class="row-label">金額</span>
+                            <input type="number" id="amount" min="1" step="1" inputmode="numeric" placeholder="0" required />
+                            <span class="row-unit">円</span>
+                        </label>
+                        <!--日時は横並びだと端末によって表示が切れるので、ラベルを上に置く-->
+                        <label class="row row-stack">
+                            <span class="row-label">日時</span>
+                            <input type="datetime-local" id="occurred-at" required />
+                        </label>
+                        <label class="row">
+                            <span class="row-label">メモ</span>
+                            <input type="text" id="memo" maxlength="255" placeholder="任意" />
+                        </label>
+                    </div>
+
+                    <p class="group-title">支払い方法</p>
+                    <div class="group group-chips">
+                        <div id="method-buttons" class="choice-group"></div>
+                    </div>
+
+                    <p class="group-title">カテゴリ</p>
+                    <div class="group group-chips">
+                        <div id="category-buttons" class="choice-group"></div>
+                    </div>
+
+                    <button type="submit" class="primary-btn">保存</button>
+                    <p id="tx-form-msg" class="msg" hidden></p>
+                </form>
+            </div>
+
+            <!--=== 集計タブ ===
+                月ピッカーは1つだけ。集計と明細の両方がこれに連動する-->
+            <div id="panel-summary" role="tabpanel" hidden>
+                <div class="list-header">
+                    <input type="month" id="month-picker" class="month-input" />
+                    <div class="list-header-actions">
+                        <button type="button" id="review-filter-btn" class="chip-btn review" hidden></button>
+                        <button type="button" id="reload-btn" class="chip-btn">更新</button>
+                    </div>
+                </div>
+
+                <!--合計（中身は app.js が書き込む）-->
+                <div class="group summary-totals">
+                    <div class="sum-row">
+                        <span class="sum-label">収入</span>
+                        <span id="sum-income" class="tx-amount amount-income">¥0</span>
+                    </div>
+                    <div class="sum-row">
+                        <span class="sum-label">支出</span>
+                        <span id="sum-expense" class="tx-amount amount-expense">¥0</span>
+                    </div>
+                    <div class="sum-row sum-row-total">
+                        <span class="sum-label">収支</span>
+                        <span id="sum-balance" class="tx-amount">¥0</span>
+                    </div>
+                    <p id="sum-review-note" class="sum-note" hidden></p>
+                </div>
+
+                <p class="group-title">支出の内訳</p>
+                <ul id="sum-expense-list" class="group breakdown"></ul>
+
+                <p class="group-title">収入の内訳</p>
+                <ul id="sum-income-list" class="group breakdown"></ul>
+
+                <p class="group-title">明細</p>
+                <ul id="tx-list" class="group"></ul>
+            </div>
         </section>
         <script src="/app.js"></script>
     </body>

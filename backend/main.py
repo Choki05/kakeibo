@@ -3,12 +3,13 @@ from pathlib import Path
 import auth
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from routers import ingest, transactions
+from routers import ingest, summary, transactions
 
 app = FastAPI(title="Kakeibo API")
 app.include_router(auth.router)
 app.include_router(transactions.router)
 app.include_router(ingest.router)
+app.include_router(summary.router)
 
 
 @app.get("/api/health")
