@@ -92,6 +92,24 @@ h1 {
   font-size: 0.95rem;
 }
 
+/* ラベルを上に置いて、入力を横幅いっぱいに使う行。
+   datetime-local はブラウザが用意する部品で必要な幅が端末ごとに違い、
+   横並びだと収まらず端が切れることがあるため。 */
+.row-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.row-stack .row-label {
+  flex: none;
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+.row-stack input {
+  text-align: left;
+  width: 100%;
+}
+
 .row-unit {
   color: var(--text-sub);
   font-size: 0.9rem;
@@ -327,7 +345,7 @@ button {
 .tx-actions {
   display: flex;
   gap: 8px;
-  margin-top: 4px;
+  margin-bottom: 4px;
 }
 .tx-actions button {
   flex: 1;
@@ -335,28 +353,91 @@ button {
   font-size: 15px;
   background: var(--field);
   border: none;
-}
-.del-btn {
-  color: var(--expense);
+  font-weight: 600;
 }
 
-/* 行内編集フォーム */
-.tx-edit {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* 保存は主要な操作なのでアクセント色で塗る */
+.tx-actions .save-btn {
+  flex: 1.4;
+  background: var(--accent);
+  color: #fff;
 }
-.tx-edit input,
-.tx-edit select {
+
+.del-btn {
+  flex: 0.8;
+  color: var(--expense);
+  font-weight: 500;
+}
+
+/* 行内編集フォーム：一覧と区別できるよう一段沈んだ箱にする */
+.tx-edit {
+  background: var(--field);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 2px 0 10px;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  min-height: 48px;
+  margin: 0;
+  border-bottom: 1px solid var(--separator);
+}
+.edit-row:last-child {
+  border-bottom: none;
+}
+
+.edit-row-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.edit-label {
+  flex: 0 0 4em;
+  font-size: 0.82rem;
+  color: var(--text-sub);
+}
+.edit-row-stack .edit-label {
+  flex: none;
+}
+
+.edit-row input,
+.edit-row select {
+  flex: 1;
+  min-width: 0;
   width: 100%;
-  padding: 11px 12px;
-  min-height: 44px;
-  font-size: 16px;
-  font-family: inherit;
-  border: 1px solid var(--separator);
-  border-radius: 8px;
-  background: var(--card);
+  border: none;
+  background: transparent;
   color: var(--text);
+  font-family: inherit;
+  font-size: 16px; /* 16px 未満だと iOS で入力時に自動ズームする */
+  text-align: right;
+  padding: 0;
+}
+.edit-row input:focus,
+.edit-row select:focus {
+  outline: none;
+}
+
+/* select は既定の矢印を消し、右端に自前の「▾」を置く */
+.edit-row select {
+  appearance: none;
+  -webkit-appearance: none;
+  text-align-last: right;
+  padding-right: 16px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-sub) 50%),
+    linear-gradient(135deg, var(--text-sub) 50%, transparent 50%);
+  background-position: right 5px center, right 1px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.edit-row-stack input {
+  text-align: left;
 }
 
 /* ===== お知らせ・メッセージ ===== */

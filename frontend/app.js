@@ -347,6 +347,7 @@ function editTx(li, tx) {
   amountInp.type = "number";
   amountInp.min = "1";
   amountInp.step = "1";
+  amountInp.inputMode = "numeric";
   amountInp.value = tx.amount;
 
   const dtInp = document.createElement("input");
@@ -367,6 +368,7 @@ function editTx(li, tx) {
   const saveBtn = document.createElement("button");
   saveBtn.type = "button";
   saveBtn.textContent = "保存";
+  saveBtn.className = "save-btn";
 
   const cancelBtn = document.createElement("button");
   cancelBtn.type = "button";
@@ -459,8 +461,29 @@ function editTx(li, tx) {
   buttons.className = "tx-actions";
   buttons.append(saveBtn, cancelBtn, delBtn);
 
-  box.append(amountInp, dtInp, methodSel, categorySel, memoInp, buttons, msg);
-  li.append(box);
+  // 入力フォームと同じ「ラベル＋値」の行に整える。
+  // 日時だけは横並びにすると端末によって表示が切れるため、ラベルを上に置く。
+  box.append(
+    editRow("金額", amountInp),
+    editRow("日時", dtInp, true),
+    editRow("方法", methodSel),
+    editRow("カテゴリ", categorySel),
+    editRow("メモ", memoInp)
+  );
+  li.append(box, buttons, msg);
+}
+
+/** 編集フォームの1行を作る。stack=true ならラベルを上に置いて横幅いっぱいに使う。 */
+function editRow(labelText, control, stack) {
+  const row = document.createElement("label");
+  row.className = stack ? "edit-row edit-row-stack" : "edit-row";
+
+  const label = document.createElement("span");
+  label.className = "edit-label";
+  label.textContent = labelText;
+
+  row.append(label, control);
+  return row;
 }
 
 // 「要確認」だけを表示しているかどうか（true のときは月の絞り込みを無視する）

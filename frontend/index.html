@@ -47,7 +47,8 @@
                         <input type="number" id="amount" min="1" step="1" inputmode="numeric" placeholder="0" required />
                         <span class="row-unit">円</span>
                     </label>
-                    <label class="row">
+                    <!--日時は横並びだと端末によって表示が切れるので、ラベルを上に置く-->
+                    <label class="row row-stack">
                         <span class="row-label">日時</span>
                         <input type="datetime-local" id="occurred-at" required />
                     </label>
