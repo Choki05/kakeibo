@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from models import Direction, Method, Source, Status
 
 UNCATEGORIZED = "未分類"
-EXPENSE_CATEGORIES = {"食費", "娯楽費", "交際費", "その他", UNCATEGORIZED}
+EXPENSE_CATEGORIES = {"食費", "娯楽費", "交際費", "自己投資", "日用品", "その他", UNCATEGORIZED}
 INCOME_CATEGORIES = {"給料", "おこづかい", "回収(食費)", "回収(交際費)", "その他"}
 
 # credit_card は当初メール取り込み専用にしていたが、海外利用など自動で取り込めない
