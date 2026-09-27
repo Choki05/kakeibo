@@ -116,7 +116,11 @@
                 <p class="group-title">収入の内訳</p>
                 <ul id="sum-income-list" class="group breakdown"></ul>
 
-                <p class="group-title">明細</p>
+                <!--絞り込み中は見出しにカテゴリ名が入り、右に解除ボタンが出る-->
+                <div class="tx-list-title">
+                    <p id="tx-list-title" class="group-title">明細</p>
+                    <button type="button" id="category-clear-btn" class="plain-btn" hidden>解除</button>
+                </div>
                 <ul id="tx-list" class="group"></ul>
             </div>
         </section>

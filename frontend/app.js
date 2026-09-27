@@ -489,6 +489,17 @@ function editRow(labelText, control, stack) {
 
 // 「要確認」だけを表示しているかどうか（true のときは月の絞り込みを無視する）
 let onlyNeedsReview = false;
+// 集計の内訳でタップされたカテゴリ。nullのときは絞り込まない
+// 「その他」は支出にも収入にもあるのでdirectionとセットで覚える
+let categoryFilter = null;
+
+const txListTitle = document.getElementById("tx-list-title");
+const categoryClearBtn = document.getElementById("category-clear-btn");
+
+categoryClearBtn.addEventListener("click", () => {
+  categoryFilter = null;
+  loadTransactions();
+});
 
 // 取引を取得して描画。要確認モードのときは月をまたいで未確認の行だけ出す
 async function loadTransactions() {
@@ -507,14 +518,35 @@ async function loadTransactions() {
     return;
   }
 
-  const items = await response.json();
+  const all = await response.json();
+  // 集計の内訳がタップされていたら、そのカテゴリだけに絞る
+  const items = categoryFilter
+    ? all.filter(
+        (tx) =>
+          tx.direction === categoryFilter.direction &&
+          tx.category === categoryFilter.category
+      )
+    : all;
+
+  if (categoryFilter) {
+    const kind = categoryFilter.direction === "expense" ? "支出" : "収入";
+    txListTitle.textContent = `明細（${kind}・${categoryFilter.category}）`;
+  } else {
+    txListTitle.textContent = "明細";
+  }
+  categoryClearBtn.hidden = categoryFilter === null;
+
   txList.innerHTML = "";
 
   if (items.length === 0) {
     const li = document.createElement("li");
-    li.textContent = onlyNeedsReview
-      ? "要確認の記録はありません"
-      : "この月の記録はありません";
+    if (onlyNeedsReview) {
+      li.textContent = "要確認の記録はありません";
+    } else if (categoryFilter) {
+      li.textContent = `この月の「${categoryFilter.category}」の記録はありません`;
+    } else {
+      li.textContent = "この月の記録はありません";
+    }
     txList.appendChild(li);
   } else {
     items.forEach((tx) => txList.appendChild(renderTx(tx)));
@@ -552,6 +584,8 @@ async function loadReviewCount() {
 
 reviewFilterBtn.addEventListener("click", () => {
   onlyNeedsReview = !onlyNeedsReview;
+  // 要確認モードは月をまたぐので、月の内訳で選んだ絞り込みとは両立させない
+  categoryFilter = null;
   loadTransactions();
 });
 
@@ -613,7 +647,11 @@ reloadBtn.addEventListener("click", () => {
   loadTransactions();
   loadIngestStatus();
 });
-monthPicker.addEventListener("change", loadTransactions);
+monthPicker.addEventListener("change", () => {
+  // 前の月で選んだカテゴリの絞り込みは、新しい月には持ち越さない
+  categoryFilter = null;
+  loadTransactions();
+});
 
 // ===== タブ切り替え =====
 // 「いま表示しているタブ」を引数1つで表し、各パネルの hidden を付け外しする。
@@ -656,9 +694,18 @@ function formatYen(n) {
   return `¥${n.toLocaleString()}`;
 }
 
+// 内訳のその行が、いま明細の絞り込みに選ばれているカテゴリかどうか
+function isSelectedCategory(direction, category) {
+  return (
+    categoryFilter !== null &&
+    categoryFilter.direction === direction &&
+    categoryFilter.category === category
+  );
+}
+
 // カテゴリ別の内訳を <li> の並びにする。
 // total は「合計に対する割合」の帯を描くための分母。
-function renderBreakdown(list, items, total, color) {
+function renderBreakdown(list, items, total, color, direction) {
   list.innerHTML = "";
 
   if (items.length === 0) {
@@ -671,6 +718,8 @@ function renderBreakdown(list, items, total, color) {
 
   items.forEach((item) => {
     const li = document.createElement("li");
+    li.classList.add("tappable");
+    li.classList.toggle("selected", isSelectedCategory(direction, item.category));
 
     const row = document.createElement("div");
     row.className = "sum-row";
@@ -699,6 +748,18 @@ function renderBreakdown(list, items, total, color) {
     fill.style.background = color;
     bar.appendChild(fill);
 
+    li.addEventListener("click", async () => {
+      // 内訳は「この月」の数字なので、要確認モード（月をまたぐ表示）はやめる
+      onlyNeedsReview = false;
+      categoryFilter = isSelectedCategory(direction, item.category)
+        ? null
+        : { direction, category: item.category };
+      await loadTransactions();
+      // 選んだときだけ明細まで移動する（解除したときはその場にとどまる）
+      if (categoryFilter) {
+        txListTitle.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
     li.append(row, bar);
     list.appendChild(li);
   });
@@ -741,13 +802,15 @@ async function loadSummary() {
     sumExpenseList,
     data.expense_by_category,
     data.expense_total,
-    "var(--expense)"
+    "var(--expense)",
+    "expense"
   );
   renderBreakdown(
     sumIncomeList,
     data.income_by_category,
     data.income_total,
-    "var(--income)"
+    "var(--income)",
+    "income"
   );
 }
 

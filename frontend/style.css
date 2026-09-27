@@ -587,6 +587,34 @@ button {
   font-size: 0.9rem;
   color: var(--text-sub);
 }
+/* 内訳の行はタップすると、下の明細をそのカテゴリだけに絞る */
+.breakdown li.tappable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.breakdown li.tappable:active,
+.breakdown li.selected {
+  background: var(--field);
+}
+/* 選択中は左端に色の線を出す。inset の影なので行の幅は変わらない */
+.breakdown li.selected {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* 明細の見出し。絞り込み中は右に「解除」ボタンを出す */
+.tx-list-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.tx-list-title .group-title {
+  margin-bottom: 0;
+}
+.tx-list-title .plain-btn {
+  padding: 4px 14px;
+  font-size: 0.85rem;
+}
 
 /* 合計に対する割合の帯。ライブラリを使わず幅の % だけで描く簡易グラフ。 */
 .sum-bar {
