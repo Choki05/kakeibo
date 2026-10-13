@@ -127,6 +127,21 @@ function collectItems(officialAddress) {
 }
 
 /**
+ * EXCLUDE_KEYWORD を件名か本文に含むメールなら true を返す。
+ * Gmail の検索はスレッド単位なので、除外したいメールが他のメールと同じスレッドに
+ * まとまっていると検索では外せない。そのためメール1通ずつここで判定する。
+ */
+function isExcludedMessage(message) {
+  const excludeKeyword =
+    PropertiesService.getScriptProperties().getProperty("EXCLUDE_KEYWORD");
+  if (!excludeKeyword) {
+    return false;
+  }
+  const text = (message.getSubject() + "\n" + message.getPlainBody()).normalize("NFKC");
+  return text.indexOf(excludeKeyword.normalize("NFKC")) >= 0;
+}
+
+/**
  * メール1通を取り込み用データに変換する（1通に複数件入ることがある）。
  *
  * 想定する本文の形（NFKC正規化後）:
@@ -143,6 +158,11 @@ function collectItems(officialAddress) {
  * @return {{items: Array, unprocessed: Array}}
  */
 function parseCardMessages(message) {
+  if (isExcludedMessage(message)) {
+    console.log("除外キーワードを含むためスキップ: %s", message.getSubject());
+    return { items: [], unprocessed: [] };
+  }
+
   // NFKC正規化: 全角英数字・全角記号・全角スペースを半角に揃える。
   // 「１，２３４」→「1,234」、「：」→「:」、「　」→「 」。
   const lines = message.getPlainBody().normalize("NFKC").split(/\r?\n/);
