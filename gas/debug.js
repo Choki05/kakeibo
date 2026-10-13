@@ -138,7 +138,7 @@ function debugShowUnparsed() {
     throw new Error("スクリプトプロパティ OFFICIAL_ADDRESS を設定してください");
   }
 
-  const query = "from:" + officialAddress + ' "ご利用のお知らせ" newer_than:7d';
+  const query = buildSearchQuery(officialAddress);
   const threads = GmailApp.search(query, 0, 100);
   let messageCount = 0;
   let shown = 0;
@@ -194,7 +194,7 @@ function debugFirstMessage() {
     throw new Error("スクリプトプロパティ OFFICIAL_ADDRESS を設定してください");
   }
 
-  const query = "from:" + officialAddress + ' "ご利用のお知らせ" newer_than:7d';
+  const query = buildSearchQuery(officialAddress);
   const threads = GmailApp.search(query, 0, 1);
   if (threads.length === 0) {
     return null;
@@ -239,7 +239,7 @@ function verifyDryRun() {
     throw new Error("スクリプトプロパティ OFFICIAL_ADDRESS を設定してください");
   }
 
-  const query = "from:" + officialAddress + ' "ご利用のお知らせ" newer_than:7d';
+  const query = buildSearchQuery(officialAddress);
   const threads = GmailApp.search(query, 0, 100);
   const items = [];
   let messageCount = 0;

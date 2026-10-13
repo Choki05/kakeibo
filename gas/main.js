@@ -74,13 +74,27 @@ function dryRun() {
 }
 
 /**
+ * Gmail の検索条件を組み立てる。
+ * スクリプトプロパティ EXCLUDE_KEYWORD があれば、その言葉を含むメールを除外する。
+ */
+function buildSearchQuery(officialAddress) {
+  const excludeKeyword =
+    PropertiesService.getScriptProperties().getProperty("EXCLUDE_KEYWORD");
+  let query = "from:" + officialAddress + ' "ご利用のお知らせ" newer_than:7d';
+  if (excludeKeyword) {
+    query += ' -"' + excludeKeyword + '"';
+  }
+  return query;
+}
+
+/**
  * Gmail を検索して、取り込み用データと未処理件数を集める。
  * 過去7日分を毎回送るが、重複はサーバ側が external_key で弾く。
  *
  * @return {{items: Array, unprocessed: number, unprocessedThreads: Array}}
  */
 function collectItems(officialAddress) {
-  const query = "from:" + officialAddress + ' "ご利用のお知らせ" newer_than:7d';
+  const query = buildSearchQuery(officialAddress);
   const threads = GmailApp.search(query, 0, 100);
   const items = [];
   const unprocessed = [];

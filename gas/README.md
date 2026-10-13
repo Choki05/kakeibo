@@ -47,7 +47,8 @@ Gmail（利用通知メール）
 | `importBankEmails` | 本番用の入り口。**時間主導トリガーはこの名前に紐付いているので変更しないこと** |
 | `dryRun` | 送信せず解析結果をログ出力するだけ。初回確認用 |
 | `debugShowStructure`（`debug.js`） | メール本文の構造だけを、値を伏せてログ出力する診断用。書式が変わったときに使う |
-| `collectItems` / `parseCardMessages` / `findDetailLine` / `formatOccurredAt` / `hashExternalKey` / `postToKakeibo` | 内部処理 |
+| `buildSearchQuery` | Gmail の検索条件を組み立てる。`main.js` と `debug.js` の検索はすべてこれを使う |
+| `collectItems` / `parseCardMessages` / `formatOccurredAt` / `hashExternalKey` / `postToKakeibo` | 内部処理 |
 
 ## セットアップ
 
@@ -62,9 +63,10 @@ Gmail（利用通知メール）
 
    | キー | 値 |
    |---|---|
-   | `OFFICIAL_ADDRESS` | 利用通知メールの送信元アドレス |
+   | `OFFICIAL_ADDRESS` | 利用通知メールの送信元アドレス。複数あるときは `(a@example.com OR b@example.com)` のように書く（検索条件の `from:` の後ろにそのまま入るため） |
    | `API_BASE_URL` | 家計簿APIのベースURL（例: `https://example.duckdns.org`） |
    | `INGEST_TOKEN` | バックエンドの `.env` の `INGEST_TOKEN` と同じ値 |
+   | `EXCLUDE_KEYWORD` | （任意）この言葉を含むメールを取り込まない（例: 取り込みたくないカードの名前）。全角/半角はメールの表記に合わせる |
 
 4. `clasp push` でコードを反映
 5. エディタで `dryRun` を実行し、解析結果をログで確認（初回は権限の承認が必要）
